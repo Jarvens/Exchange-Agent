@@ -1,12 +1,15 @@
 // date: 2019-03-05
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"fmt"
+	"github.com/Jarvens/Exchange-Agent/tcp"
+	"net/http"
+)
 
 func main() {
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "pong"})
-	})
-	r.Run()
+	inchan := make(chan byte)
+	http.HandleFunc("/", tcp.WebsocketHandler)
+	go http.ListenAndServe("0.0.0.0:12345", nil)
+	fmt.Println(<-inchan)
 }
