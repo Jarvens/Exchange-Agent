@@ -10,11 +10,11 @@ var Db *gorm.DB
 
 //使用mysql初始化数据库
 //func init()  {
-//	Db,_=sql.Open("mysql","root:@tcp(127.0.0.1:3306)/eoe?charset=utf8&parseTime=true")
-//	Db.SetMaxOpenConns(2000)
-//	Db.SetMaxIdleConns(1000)
-//	Db.Ping()
-//}
+////	Db,_=sql.Open("mysql","root:@tcp(127.0.0.1:3306)/eoe?charset=utf8&parseTime=true")
+////	Db.SetMaxOpenConns(2000)
+////	Db.SetMaxIdleConns(1000)
+////	Db.Ping()
+////}
 
 //使用gorm初始化数据库
 //使用gorm框架连接数据库需要导入dialects
@@ -25,4 +25,5 @@ func init() {
 	Db.DB().SetMaxIdleConns(1000)
 	//关闭复数形式 默认表明为 model 复数
 	Db.SingularTable(true)
+	Db.LogMode(true)
 }
