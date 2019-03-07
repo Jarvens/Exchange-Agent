@@ -3,6 +3,7 @@ package pb
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"google.golang.org/grpc"
@@ -24,7 +25,7 @@ func (q *quoteServer) QuoteBidStream(stream RpcBidStream1_QuoteBidStreamServer) 
 	if err != nil {
 		fmt.Printf("获取客户端IP错误: %v\n", err)
 	}
-	fmt.Printf("客户端IP地址: %s\n", address)
+	fmt.Printf("客户端IP地址Hash值: %x\n", sha256.Sum256([]byte(address)))
 	for {
 		select {
 		case <-ctx.Done():
@@ -36,11 +37,16 @@ func (q *quoteServer) QuoteBidStream(stream RpcBidStream1_QuoteBidStreamServer) 
 				fmt.Println("关闭客户端")
 				return nil
 			}
-			if err != nil {
-				fmt.Println("读取客户端数据流出错")
-			}
-			fmt.Printf("读取到数据流: %v\n", request)
 
+			if err != nil {
+				fmt.Printf("读取客户端数据流出错: %v\n", err)
+				return nil
+			}
+			err = Dispatcher(stream, request, address)
+			if err != nil {
+				fmt.Println(err)
+				return ctx.Err()
+			}
 		}
 	}
 	return nil

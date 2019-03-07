@@ -1,5 +1,5 @@
 // date: 2019-03-06
-package main
+package common
 
 import (
 	"errors"

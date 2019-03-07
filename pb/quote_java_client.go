@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"io"
 	"os"
+	"strings"
 )
 
 func QuoteBidStreamClient() {
@@ -29,7 +30,8 @@ func QuoteBidStreamClient() {
 		for {
 			line, _ := input.ReadString('\n')
 			fmt.Printf("命令行输入: %v\n", line)
-			if err := stream.Send(&RpcRequest1{Event: "quote.kline.1m.btc_usdt", Channel: "subscribe"}); err != nil {
+			line = strings.Replace(line, "\n", "", -1)
+			if err := stream.Send(&RpcRequest1{Event: "subscribe", Channel: "quote.tick." + line}); err != nil {
 				return
 			}
 		}
@@ -44,6 +46,6 @@ func QuoteBidStreamClient() {
 		if err != nil {
 			fmt.Printf("客户端接收数据出错: %v\n", err)
 		}
-		fmt.Printf("打印数据: message: %s code: %d", res.Message, res.Code)
+		fmt.Printf("打印数据: message: %s code: %d\n", res.Message, res.Code)
 	}
 }
