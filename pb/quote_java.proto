@@ -1,0 +1,21 @@
+syntax="proto3";
+package pb;
+
+message RpcResponse1{
+    int32 code=1;
+    string message=2;
+    string channel=3;
+    int64 timestamp=4;
+}
+
+//event: subscribe
+//channel: quote.kline.1m.btc_usdt
+message RpcRequest1{
+    string event=1;
+    string channel=2;
+}
+
+
+service RpcBidStream1{
+    rpc QuoteBidStream(stream RpcRequest1)returns(stream RpcResponse1){}
+}

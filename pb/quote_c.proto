@@ -1,0 +1,23 @@
+syntax="proto3";
+package pb;
+
+message Tick{
+    string cmd=1;
+    string symbol=2;
+    int64 ts=3;
+    repeated TickData data=4;
+}
+
+
+message TickData{
+    double amount=1;
+    double price=2;
+    int32 dir=3;
+}
+
+
+message Depth{
+    string cmd=1;
+    string symbol=2;
+}
+

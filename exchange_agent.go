@@ -3,13 +3,20 @@ package main
 
 import (
 	"fmt"
+	"github.com/Jarvens/Exchange-Agent/pb"
 	"github.com/Jarvens/Exchange-Agent/tcp"
 	"net/http"
 )
 
 func main() {
-	inchan := make(chan byte)
+	inChan := make(chan byte)
+
 	http.HandleFunc("/", tcp.WebsocketHandler)
 	go http.ListenAndServe("0.0.0.0:12345", nil)
-	fmt.Println(<-inchan)
+	fmt.Println("[Exchange-Agent]-websocket  启动成功")
+
+	go pb.QuoteServerStart()
+	fmt.Println("[Exchange-Agent]-gRPC 启动成功")
+
+	fmt.Println(<-inChan)
 }
