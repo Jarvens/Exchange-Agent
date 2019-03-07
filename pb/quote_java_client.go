@@ -31,7 +31,7 @@ func QuoteBidStreamClient() {
 			line, _ := input.ReadString('\n')
 			fmt.Printf("命令行输入: %v\n", line)
 			line = strings.Replace(line, "\n", "", -1)
-			if err := stream.Send(&RpcRequest1{Event: "subscribe", Channel: "quote.tick." + line}); err != nil {
+			if err := stream.Send(&RpcRequest1{Event: "subscribe", Channel: "quote.kline.1m." + line}); err != nil {
 				return
 			}
 		}

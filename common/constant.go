@@ -1,11 +1,18 @@
 // date: 2019-03-07
 package common
 
+import "sync"
+
 //quote.kline.1m.btc_usdt
 //quote.tick.btc_usdt
 //quote.depth.btc_usdt
 
-var SocketMap = make(map[string]map[string][]string)
+type SocketMap struct {
+	Lock    sync.Mutex
+	ConnMap map[string]map[string][]string
+}
+
+var GsMap = SocketMap{Lock: sync.Mutex{}, ConnMap: make(map[string]map[string][]string)}
 
 var KlineChan = "quote.kline.%s.%s"
 var TickChan = "quote.tick.%s"
