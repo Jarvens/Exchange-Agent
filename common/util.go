@@ -24,3 +24,13 @@ func Contain(source interface{}, target interface{}) (bool, error) {
 	}
 	return false, errors.New("不存在")
 }
+
+func SliceRemove(source []string, value string) []string {
+	target := source[:0]
+	for _, item := range source {
+		if item != value {
+			target = append(target, item)
+		}
+	}
+	return target
+}

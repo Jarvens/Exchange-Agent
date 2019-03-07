@@ -12,6 +12,9 @@ type SocketMap struct {
 	ConnMap map[string]map[string][]string
 }
 
+type ChanMap struct {
+}
+
 var GsMap = SocketMap{Lock: sync.Mutex{}, ConnMap: make(map[string]map[string][]string)}
 
 var KlineChan = "quote.kline.%s.%s"

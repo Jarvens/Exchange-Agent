@@ -22,24 +22,38 @@ func Dispatcher(stream RpcBidStream1_QuoteBidStreamServer, req *RpcRequest1, add
 		switch chanC[1] {
 		case common.Tick:
 			//channel: quote.tick.btc_usdt
-			return tick(address, channel, stream)
+			return subTick(address, channel, stream)
 		case common.Depth:
 			//channel: quote.depth.btc_usdt
-
+			return subDepth(address, channel, stream)
 		case common.Kline:
 			//channel: quote.kline.btc_usdt
-			return kline(address, channel, stream)
+			return subKline(address, channel, stream)
 		default:
+			//指令不存在
 
 		}
 	case common.UbSubscribe:
+		chanC := strings.Split(channel, ".")
+		switch chanC[1] {
+		case common.Tick:
+			return unSubTick(address, channel, stream)
+		case common.Depth:
+			return unSubDepth(address, channel, stream)
+		case common.Kline:
+			return unSubKline(address, channel, stream)
+		default:
+			//指令不存在
+
+		}
 
 	}
 	return nil
 }
 
 //成交
-func tick(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
+func subTick(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
+	//给全局Map添加锁，防止脏读
 	common.GsMap.Lock.Lock()
 	defer common.GsMap.Lock.Unlock()
 	tickMap := common.GsMap.ConnMap[address]
@@ -75,12 +89,48 @@ func tick(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) er
 }
 
 //深度
-func depth(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) {
-
+func subDepth(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
+	//给全局Map添加锁，防止脏读
+	common.GsMap.Lock.Lock()
+	defer common.GsMap.Lock.Unlock()
+	depthMap := common.GsMap.ConnMap[address]
+	if depthMap == nil {
+		depthMap = make(map[string][]string)
+		depthMap[common.Depth] = []string{channel}
+		common.GsMap.ConnMap[address] = depthMap
+		err := stream.Send(&RpcResponse1{Message: "深度订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()})
+		if err != nil {
+			fmt.Printf("深度订阅消息发送失败: %v\n", err)
+			return err
+		}
+		fmt.Printf("深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
+	} else {
+		depthChan := depthMap[common.Depth]
+		exist, _ := common.Contain(channel, depthChan)
+		if exist {
+			err := stream.Send(&RpcResponse1{Message: "深度订阅重复", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()})
+			if err != nil {
+				fmt.Printf("深度订阅重复消息发送失败: %v\n", err)
+				return err
+			}
+			fmt.Printf("深度订阅重复: 客户端地址: %s 订阅指令: %s\n", address, channel)
+		} else {
+			newChan := append(depthChan, channel)
+			depthMap[common.Depth] = newChan
+			common.GsMap.ConnMap[address] = depthMap
+			err := stream.Send(&RpcResponse1{Message: "深度订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()})
+			if err != nil {
+				fmt.Printf("深度订阅成功消息发送失败: %v\n", err)
+				return err
+			}
+			fmt.Printf("深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
+		}
+	}
+	return nil
 }
 
 //k线
-func kline(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
+func subKline(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
 	//给全局Map添加锁，防止脏读
 	common.GsMap.Lock.Lock()
 	defer common.GsMap.Lock.Unlock()
@@ -92,10 +142,10 @@ func kline(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) e
 		common.GsMap.ConnMap[address] = klineMap
 		err := stream.Send(&RpcResponse1{Message: "k线订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()})
 		if err != nil {
-			fmt.Printf("Kline订阅消息发送失败: %v\n", err)
+			fmt.Printf("K线订阅消息发送失败: %v\n", err)
 			return err
 		}
-		fmt.Printf("Kline订阅成功:  客户端地址:%s  Map: %v\n", address, common.GsMap.ConnMap[address][common.Kline])
+		fmt.Printf("K线订阅成功:  客户端地址:%s K线订阅指令: %s\n", address, channel)
 	} else {
 		klineChan := klineMap[common.Kline]
 		exist, _ := common.Contain(channel, klineChan)
@@ -105,7 +155,7 @@ func kline(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) e
 				fmt.Printf("K线重复订阅消息发送失败: %v\n", err)
 				return err
 			}
-			fmt.Printf("K线重复订阅: 客户端地址: %s 订阅指令: %s Map: %v\n", address, channel, common.GsMap.ConnMap[address][common.Kline])
+			fmt.Printf("K线重复订阅: 客户端地址: %s 订阅指令: %s\n", address, channel)
 		} else {
 			newChan := append(klineChan, channel)
 			klineMap[common.Kline] = newChan
@@ -115,9 +165,57 @@ func kline(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) e
 				fmt.Printf("K线订阅成功消息发送失败: %v\n", err)
 				return err
 			}
-			fmt.Printf("K线订阅成功: 客户端地址: %s  订阅指令: %s Map: %v\n", address, channel, common.GsMap.ConnMap[address][common.Kline])
+			fmt.Printf("K线订阅成功: 客户端地址: %s  订阅指令: %s\n", address, channel)
 		}
 	}
 
+	return nil
+}
+
+//取消成交订阅
+func unSubTick(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
+	common.GsMap.Lock.Lock()
+	defer common.GsMap.Lock.Unlock()
+
+	return nil
+
+}
+
+//取消深度订阅
+func unSubDepth(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
+	common.GsMap.Lock.Lock()
+	defer common.GsMap.Lock.Unlock()
+
+	depthMap := common.GsMap.ConnMap[address]
+	if depthMap == nil {
+
+	}
+	return nil
+}
+
+//取消K线订阅
+func unSubKline(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
+	common.GsMap.Lock.Lock()
+	defer common.GsMap.Lock.Unlock()
+
+	klineMap := common.GsMap.ConnMap[address]
+	if klineMap == nil {
+		err := stream.Send(&RpcResponse1{Message: "K先订阅数据不存在", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()})
+		if err != nil {
+			fmt.Printf("K线取消订阅消息发送失败: %v\n", err)
+			return err
+		}
+		fmt.Printf("K线取消订阅数据不存在: ")
+	} else {
+		klineChan := klineMap[common.Kline]
+		if len(klineChan) > 0 {
+			common.SliceRemove(klineChan, channel)
+		}
+		err := stream.Send(&RpcResponse1{Message: "K线取消订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()})
+		if err != nil {
+			fmt.Printf("K线取消订阅消息发送失败: %v\n", err)
+		}
+		fmt.Printf("K线取消订阅成功: 客户端地址: %s 取消指令: %s\n", address, channel)
+	}
 	return nil
 }
