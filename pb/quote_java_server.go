@@ -79,10 +79,10 @@ func QuoteServerStart() {
 func getClientIp(ctx context.Context) (string, error) {
 	pr, ok := peer.FromContext(ctx)
 	if !ok {
-		return "", errors.New("getClientIp from ctx fail")
+		return "", errors.New("获取客户端IP失败")
 	}
 	if pr.Addr == net.Addr(nil) {
-		return "", errors.New("getClientIp  peer.Address is nil")
+		return "", errors.New("获取客户端IP失败")
 	}
 	addSlice := strings.Split(pr.Addr.String(), ".")
 	return addSlice[0], nil

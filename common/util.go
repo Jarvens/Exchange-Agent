@@ -20,11 +20,11 @@ func Contain(source interface{}, target interface{}) (bool, error) {
 		if tVal.MapIndex(reflect.ValueOf(source)).IsValid() {
 			return true, nil
 		}
-
 	}
 	return false, errors.New("不存在")
 }
 
+// 从slice中删除
 func SliceRemove(source []string, value string) []string {
 	target := source[:0]
 	for _, item := range source {
