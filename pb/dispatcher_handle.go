@@ -8,7 +8,14 @@ import (
 	"time"
 )
 
-//请求分发处理器
+// 请求分发处理器，根据指令不同调用具体处理器，处理后将处理结果通过 RpcResponse1返回到客户端
+// 订阅/取消订阅，执行同时需要将 GsMap全局对象加锁，防止脏读数据出现
+// 根据指令分类为 订阅(subscribe) 取消订阅(un_subscribe)两个大模块 指令分为: 心跳(ping)
+// 最新成交(tick) 深度(depth) K线(kline)
+// @param  stream gRPC 流对象
+// @param  req 请求封装体
+// @param  address 客户端地址
+// @return error
 func Dispatcher(stream RpcBidStream1_QuoteBidStreamServer, req *RpcRequest1, address string) error {
 	event := req.Event
 	channel := req.Channel
@@ -51,7 +58,12 @@ func Dispatcher(stream RpcBidStream1_QuoteBidStreamServer, req *RpcRequest1, add
 	return nil
 }
 
-//成交
+// 订阅最新成交逻辑处理器，根据address key获取GsMap中是否存在该地址的订阅信息
+// 不存在则直接将订阅的channel放入tick模块中
+// @param  address 客户端地址
+// @param  channel 订阅频道
+// @param  stream  gRPC流处理器
+// @return error   错误信息
 func subTick(address, channel string, stream RpcBidStream1_QuoteBidStreamServer) error {
 	//给全局Map添加锁，防止脏读
 	common.GsMap.Lock.Lock()
