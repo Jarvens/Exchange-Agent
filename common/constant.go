@@ -8,23 +8,23 @@ import "sync"
 //quote.depth.btc_usdt
 
 type SocketMap struct {
-	Lock    sync.Mutex
+	sync.Mutex
 	ConnMap map[string]map[string][]string
+	//缺少连接属性
 }
 
-type ChanMap struct {
-}
-
-var GsMap = SocketMap{Lock: sync.Mutex{}, ConnMap: make(map[string]map[string][]string)}
-
-var KlineChan = "quote.kline.%s.%s"
-var TickChan = "quote.tick.%s"
-var DepthChan = "quote.depth.%s"
+var (
+	Smap      = &SocketMap{sync.Mutex{}, make(map[string]map[string][]string)}
+	KlineChan = "quote.kline.%s.%s"
+	TickChan  = "quote.tick.%s"
+	DepthChan = "quote.depth.%s"
+)
 
 const (
 	Ping        = "ping"
+	Pong        = "pong"
 	Subscribe   = "subscribe"
-	UbSubscribe = "ub_subscribe"
+	UnSubscribe = "ub_subscribe"
 	Tick        = "tick"
 	Depth       = "depth"
 	Kline       = "kline"

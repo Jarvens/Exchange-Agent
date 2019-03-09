@@ -19,5 +19,6 @@ message TickData{
 message Depth{
     string cmd=1;
     string symbol=2;
+    
 }
 

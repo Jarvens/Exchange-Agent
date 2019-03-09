@@ -10,7 +10,7 @@ import (
 func Create(table interface{}, data interface{}) {
 	res := validTable(table)
 	if res {
-		if err := Db.Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8").CreateTable(m).Error; err != nil {
+		if err := Db.Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8").CreateTable(table).Error; err != nil {
 			fmt.Printf("创建表结构失败: %v\n", err)
 		}
 		if err := Db.Create(data).Error; err != nil {

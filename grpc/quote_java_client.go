@@ -1,5 +1,5 @@
 // date: 2019-03-07
-package pb
+package grpc
 
 import (
 	"bufio"
