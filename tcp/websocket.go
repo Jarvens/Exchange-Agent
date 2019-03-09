@@ -19,8 +19,9 @@ var upgrade = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool {
 }, EnableCompression: true}
 
 // 使用fileDescription 文件描述符的优点在于不受限制
+// 使用fileDescription 需要每次进行参数校验判断fd是否为当前连接fd
 // 使用地址+端口的方式   受限制
-var Wmap = make(map[int]*Connection)
+var Wmap = make(map[string]*Connection)
 
 type Connection struct {
 	wsConn    *websocket.Conn
@@ -46,13 +47,11 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("处理器初始化失败: %v\n", err)
 		conn.Close()
 	}
-
 	for {
 		if _, err = conn.Read(); err != nil {
 			goto ERR
 		}
 	}
-
 ERR:
 	conn.Close()
 }
@@ -107,10 +106,11 @@ ERR:
 }
 
 func NewWebsocket(ws *websocket.Conn) (c *Connection, err error) {
-	fd := makeFd(ws)
-	fmt.Printf("文件描述符: %d\n", fd)
+	//fd := makeFd(ws)
+	//fmt.Printf("文件描述符: %d\n", fd)
 	conn := &Connection{wsConn: ws, inChan: make(chan []byte, 1024), outChan: make(chan []byte, 1024), closeChan: make(chan byte, 1)}
-	Wmap[fd] = conn
+	//连接进来不需要将当前连接加入链接储存器，由后续订阅操作添加
+	//Wmap[fd] = conn
 	conn.onConnected()
 	go conn.LoopRead()
 	go conn.LoopWrite()
@@ -214,22 +214,20 @@ func subTick(c *Connection, channel string) error {
 	//加锁 防止脏读数据
 	c.Lock()
 	defer c.Unlock()
-
-	fd := makeFd(c.wsConn)
-	con := Wmap[fd]
+	address := c.wsConn.RemoteAddr().String()
+	con := Wmap[address]
 	if con == nil {
-		//con:=make(map[int]*Connection)
 		tickMap := make(map[string][]string)
 		tickMap[common.Tick] = []string{channel}
 		c.event = tickMap
-		Wmap[fd] = c
+		Wmap[address] = c
 	} else {
 		tickMap := con.event[common.Tick]
 		if tickMap == nil {
 			tickMap := make(map[string][]string)
 			tickMap[common.Tick] = []string{channel}
 			c.event = tickMap
-			Wmap[fd] = c
+			Wmap[address] = c
 		} else {
 			exist, _ := common.Contain(channel, tickMap)
 			if exist {
@@ -243,7 +241,7 @@ func subTick(c *Connection, channel string) error {
 			} else {
 				tickMap = append(tickMap, channel)
 				c.event[common.Tick] = tickMap
-				Wmap[fd] = c
+				Wmap[address] = c
 				response := Success(channel)
 				err := c.wsConn.WriteJSON(response)
 				if err != nil {
@@ -261,7 +259,11 @@ func subTick(c *Connection, channel string) error {
 func subDepth(c *Connection, channel string) {
 	c.Lock()
 	defer c.Unlock()
+	address := c.wsConn.RemoteAddr().String()
+	depthMap := Wmap[address]
+	if depthMap == nil {
 
+	}
 }
 
 //订阅K线
