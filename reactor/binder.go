@@ -7,18 +7,16 @@ import (
 )
 
 type eventConn struct {
-	Event string
-	Conn  *Conn
+	Event   string
+	Conn    *Conn
+	Channel []string
 }
 
 type binder struct {
 	sync.RWMutex
 
-	//客户端地址-连接 map
-	address2EventConnMap map[string]*[]eventConn
-
 	//uuid-连接地址 map
-	uuid2AddressMap map[string]string
+	uuid2EventMap map[string]*eventConn
 }
 
 // 绑定 uuid-address-event

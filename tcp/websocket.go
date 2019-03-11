@@ -226,8 +226,8 @@ func subTick(c *Connection, channel string) error {
 		if tickMap == nil {
 			tickMap := make(map[string][]string)
 			tickMap[common.Tick] = []string{channel}
-			c.event = tickMap
-			Wmap[address] = c
+			con.event = tickMap
+			Wmap[address] = con
 		} else {
 			exist, _ := common.Contain(channel, tickMap)
 			if exist {
@@ -260,16 +260,75 @@ func subDepth(c *Connection, channel string) {
 	c.Lock()
 	defer c.Unlock()
 	address := c.wsConn.RemoteAddr().String()
-	depthMap := Wmap[address]
-	if depthMap == nil {
-
+	depthMap, ok := Wmap[address]
+	if ok {
+		channelSlice, ok := depthMap.event[common.Depth]
+		if ok {
+			exist, _ := common.Contain(channel, channelSlice)
+			if exist {
+				response := SubRepeat(channel)
+				err := c.wsConn.WriteJSON(response)
+				if err != nil {
+					fmt.Printf("ws深度订阅重复消息发送失败: %v\n", err)
+				}
+				fmt.Printf("ws深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
+			} else {
+				channelSlice := append(channelSlice, channel)
+				depthMap.event[common.Depth] = channelSlice
+				Wmap[address] = depthMap
+				response := Success(channel)
+				err := c.wsConn.WriteJSON(response)
+				if err != nil {
+					fmt.Printf("深度订阅消息发送失败: %v\n", err)
+				}
+				fmt.Printf("ws深度订阅成功: 客户端地址:%s 订阅指令: %s\n", address, channel)
+			}
+		}
+	} else {
+		depthMap := make(map[string][]string)
+		depthMap[common.Depth] = []string{channel}
+		c.event = depthMap
+		Wmap[address] = c
 	}
 }
 
 //订阅K线
-func subKline(c *Connection, channel string) {
+func subKline(c *Connection, channel string) error {
 	c.Lock()
 	defer c.Unlock()
+	address := c.wsConn.RemoteAddr().String()
+	klineMap, ok := Wmap[address]
+	if ok {
+		klineChannel, ok := klineMap.event[common.Kline]
+		if ok {
+			response := SubRepeat(channel)
+			err := c.wsConn.WriteJSON(response)
+			if err != nil {
+				fmt.Printf("K线重复订阅消息发送失败: %v\n", err)
+				return err
+			}
+			fmt.Printf("K线重复订阅: 客户端地址: %s 订阅指令: %s\n", address, channel)
+			return nil
+		} else {
+			klineChannel = append(klineChannel, channel)
+			klineMap.event[common.Kline] = klineChannel
+			Wmap[address] = klineMap
+		}
+	} else {
+		klineMap := make(map[string][]string)
+		klineMap[common.Kline] = []string{channel}
+		c.event = klineMap
+		Wmap[address] = c
+		response := Success(channel)
+		err := c.wsConn.WriteJSON(response)
+		if err != nil {
+			fmt.Printf("K线订阅成功消息发送失败: %v\n", err)
+			return err
+		}
+		fmt.Printf("ws K线订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
+		return nil
+	}
+	return nil
 }
 
 //取消成交订阅
