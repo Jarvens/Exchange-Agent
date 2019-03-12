@@ -3,5 +3,5 @@ package config
 
 const (
 	// DEVELOPMENT | TEST | PRODUCTION
-	Environment = "DEVELOPMENT"
+	Environment = "PRODUCTION"
 )

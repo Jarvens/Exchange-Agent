@@ -35,7 +35,16 @@ func InitLogToFile() {
 		config.ErrorLogMaxBackups,
 		config.ErrorLogMaxAge)
 	logrus.SetOutput(out)
-	logrus.SetLevel(logrus.WarnLevel)
+
+	access := LumberJackLogger(config.AccessLogFilePath+config.AccessLogFileExtension,
+		config.AccessLogMaxSize,
+		config.AccessLogMaxBackups,
+		config.AccessLogMaxAge)
+	logrus.SetLevel(logrus.InfoLevel)
+	//成功日志输出
+	logrus.SetOutput(access)
+	//错误日志输出
+	logrus.SetLevel(logrus.InfoLevel)
 }
 
 func Init(environment string) {
@@ -47,7 +56,7 @@ func Init(environment string) {
 	case "PRODUCTION":
 		InitLogToFile()
 	}
-	logrus.Debugf("Environment : %s", environment)
+	logrus.Infof("Environment : %s", environment)
 }
 
 func Debug(msg string) {

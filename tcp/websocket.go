@@ -4,8 +4,8 @@ package tcp
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/Jarvens/Exchange-Agent/common"
+	"github.com/Jarvens/Exchange-Agent/util/log"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"reflect"
@@ -44,7 +44,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		conn  *Connection
 	)
 	if wsCon, err = upgrade.Upgrade(w, r, nil); err != nil {
-		fmt.Printf("处理器upgrade失败: %v\n", err)
+		log.Infof("处理器upgrade失败: %v\n", err)
 		return
 	}
 	wsCon.SetCloseHandler(func(code int, text string) error {
@@ -54,7 +54,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if conn, err = NewWebsocket(wsCon); err != nil {
-		fmt.Printf("处理器初始化失败: %v\n", err)
+		log.Infof("处理器初始化失败: %v\n", err)
 		conn.Close()
 	}
 	for {
@@ -89,12 +89,12 @@ func (c *Connection) LoopRead() {
 		//
 		request := Request{}
 		json.Unmarshal(data, &request)
-		fmt.Printf("读取消息: %v\n", request)
+		log.Infof("读取消息: %v\n", request)
 		dispatcher(c, &request)
 		select {
 		case c.inChan <- data:
 		case <-c.closeChan:
-			fmt.Println("关闭消息接收")
+			log.Infof("关闭消息接收")
 			break
 		}
 	}
@@ -143,7 +143,7 @@ func (c *Connection) Read() (data []byte, err error) {
 	select {
 	case data = <-c.inChan:
 	case <-c.closeChan:
-		fmt.Printf("[Exchange-Agent]连接关闭: 客户端地址: %s\n", c.wsConn.RemoteAddr().String())
+		log.Infof("[Exchange-Agent]连接关闭: 客户端地址: %s\n", c.wsConn.RemoteAddr().String())
 		return nil, errors.New("连接关闭")
 	}
 	return
@@ -151,15 +151,15 @@ func (c *Connection) Read() (data []byte, err error) {
 
 func (c *Connection) Write(data []byte) (err error) {
 	if err = c.wsConn.WriteMessage(websocket.TextMessage, data); err != nil {
-		fmt.Printf("回写消息失败: %v\n", err)
+		log.Errorf("回写消息失败: %v\n", err)
 		return err
 	}
-	fmt.Printf("回写内容: %s\n", string(data))
+	log.Infof("回写内容: %s\n", string(data))
 	return
 }
 
 func (c *Connection) onConnected() {
-	fmt.Printf("[Exchange-Agent]%s 加入会话\n", c.wsConn.RemoteAddr().String())
+	log.Infof("[Exchange-Agent]%s 加入会话\n", c.wsConn.RemoteAddr().String())
 }
 
 //请求分发
@@ -172,7 +172,7 @@ func dispatcher(c *Connection, req *Request) {
 	case common.Subscribe:
 		channelStr := strings.Split(channel, ".")
 		if len(channelStr) <= 1 {
-			fmt.Printf("数据错误")
+			log.Infof("数据错误: %s", channel)
 			response := Fail(channel)
 			data, _ := json.Marshal(response)
 			c.Write(data)
@@ -221,7 +221,7 @@ func Pong(channel string) *Response {
 func toJson(data interface{}) []byte {
 	bytes, err := json.Marshal(&data)
 	if err != nil {
-		fmt.Printf("JSON转换错误: %v\n", err)
+		log.Errorf("JSON转换错误: %v\n", err)
 		return nil
 	}
 	return bytes
@@ -252,10 +252,10 @@ func subTick(c *Connection, channel string) error {
 				response := SubRepeat(channel)
 				err := c.wsConn.WriteJSON(response)
 				if err != nil {
-					fmt.Printf("ws订阅失败: %v\n", err)
+					log.Errorf("ws订阅失败: %v\n", err)
 					return err
 				}
-				fmt.Printf("ws订阅成功: 客户端地址: %s 订阅指令: %s\n", c.wsConn.RemoteAddr().String(), channel)
+				log.Infof("ws订阅成功: 客户端地址: %s 订阅指令: %s\n", c.wsConn.RemoteAddr().String(), channel)
 			} else {
 				tickMap = append(tickMap, channel)
 				c.event.e[common.Tick] = tickMap
@@ -263,10 +263,10 @@ func subTick(c *Connection, channel string) error {
 				response := Success(channel)
 				err := c.wsConn.WriteJSON(response)
 				if err != nil {
-					fmt.Printf("ws订阅失败: %v\n", err)
+					log.Errorf("ws订阅失败: %v\n", err)
 					return err
 				}
-				fmt.Printf("ws订阅成功: 客户端地址: %s 订阅指令: %s\n", c.wsConn.RemoteAddr().String(), channel)
+				log.Infof("ws订阅成功: 客户端地址: %s 订阅指令: %s\n", c.wsConn.RemoteAddr().String(), channel)
 			}
 		}
 	}
@@ -287,9 +287,9 @@ func subDepth(c *Connection, channel string) {
 				response := SubRepeat(channel)
 				err := c.wsConn.WriteJSON(response)
 				if err != nil {
-					fmt.Printf("ws深度订阅重复消息发送失败: %v\n", err)
+					log.Errorf("ws深度订阅重复消息发送失败: %v\n", err)
 				}
-				fmt.Printf("ws深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
+				log.Infof("ws深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
 			} else {
 				channelSlice := append(channelSlice, channel)
 				depthMap.event.e[common.Depth] = channelSlice
@@ -297,9 +297,9 @@ func subDepth(c *Connection, channel string) {
 				response := Success(channel)
 				err := c.wsConn.WriteJSON(response)
 				if err != nil {
-					fmt.Printf("深度订阅消息发送失败: %v\n", err)
+					log.Errorf("深度订阅消息发送失败: %v\n", err)
 				}
-				fmt.Printf("ws深度订阅成功: 客户端地址:%s 订阅指令: %s\n", address, channel)
+				log.Infof("ws深度订阅成功: 客户端地址:%s 订阅指令: %s\n", address, channel)
 			}
 		}
 	} else {
@@ -322,10 +322,10 @@ func subKline(c *Connection, channel string) error {
 			response := SubRepeat(channel)
 			err := c.wsConn.WriteJSON(response)
 			if err != nil {
-				fmt.Printf("K线重复订阅消息发送失败: %v\n", err)
+				log.Errorf("K线重复订阅消息发送失败: %v\n", err)
 				return err
 			}
-			fmt.Printf("K线重复订阅: 客户端地址: %s 订阅指令: %s\n", address, channel)
+			log.Infof("K线重复订阅: 客户端地址: %s 订阅指令: %s\n", address, channel)
 			return nil
 		} else {
 			klineChannel = append(klineChannel, channel)
@@ -340,10 +340,10 @@ func subKline(c *Connection, channel string) error {
 		response := Success(channel)
 		err := c.wsConn.WriteJSON(response)
 		if err != nil {
-			fmt.Printf("K线订阅成功消息发送失败: %v\n", err)
+			log.Errorf("K线订阅成功消息发送失败: %v\n", err)
 			return err
 		}
-		fmt.Printf("ws K线订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
+		log.Infof("ws K线订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
 		return nil
 	}
 	return nil
