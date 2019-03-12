@@ -23,6 +23,10 @@ var upgrade = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool {
 // 使用地址+端口的方式   受限制
 var Wmap = make(map[string]*Connection)
 
+type event struct {
+	e map[string][]string
+}
+
 type Connection struct {
 	wsConn    *websocket.Conn
 	inChan    chan []byte
@@ -30,7 +34,7 @@ type Connection struct {
 	closeChan chan byte
 	sync.Mutex
 	isClosed bool
-	event    map[string][]string
+	*event
 }
 
 func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,11 +110,7 @@ ERR:
 }
 
 func NewWebsocket(ws *websocket.Conn) (c *Connection, err error) {
-	//fd := makeFd(ws)
-	//fmt.Printf("文件描述符: %d\n", fd)
 	conn := &Connection{wsConn: ws, inChan: make(chan []byte, 1024), outChan: make(chan []byte, 1024), closeChan: make(chan byte, 1)}
-	//连接进来不需要将当前连接加入链接储存器，由后续订阅操作添加
-	//Wmap[fd] = conn
 	conn.onConnected()
 	go conn.LoopRead()
 	go conn.LoopWrite()
@@ -217,16 +217,16 @@ func subTick(c *Connection, channel string) error {
 	address := c.wsConn.RemoteAddr().String()
 	con := Wmap[address]
 	if con == nil {
-		tickMap := make(map[string][]string)
-		tickMap[common.Tick] = []string{channel}
-		c.event = tickMap
+		event := &event{make(map[string][]string)}
+		event.e[common.Tick] = []string{channel}
+		c.event = event
 		Wmap[address] = c
 	} else {
-		tickMap := con.event[common.Tick]
+		tickMap := con.event.e[common.Tick]
 		if tickMap == nil {
-			tickMap := make(map[string][]string)
-			tickMap[common.Tick] = []string{channel}
-			con.event = tickMap
+			event := &event{make(map[string][]string)}
+			event.e[common.Tick] = []string{channel}
+			con.event = event
 			Wmap[address] = con
 		} else {
 			exist, _ := common.Contain(channel, tickMap)
@@ -240,7 +240,7 @@ func subTick(c *Connection, channel string) error {
 				fmt.Printf("ws订阅成功: 客户端地址: %s 订阅指令: %s\n", c.wsConn.RemoteAddr().String(), channel)
 			} else {
 				tickMap = append(tickMap, channel)
-				c.event[common.Tick] = tickMap
+				c.event.e[common.Tick] = tickMap
 				Wmap[address] = c
 				response := Success(channel)
 				err := c.wsConn.WriteJSON(response)
@@ -262,7 +262,7 @@ func subDepth(c *Connection, channel string) {
 	address := c.wsConn.RemoteAddr().String()
 	depthMap, ok := Wmap[address]
 	if ok {
-		channelSlice, ok := depthMap.event[common.Depth]
+		channelSlice, ok := depthMap.event.e[common.Depth]
 		if ok {
 			exist, _ := common.Contain(channel, channelSlice)
 			if exist {
@@ -274,7 +274,7 @@ func subDepth(c *Connection, channel string) {
 				fmt.Printf("ws深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
 			} else {
 				channelSlice := append(channelSlice, channel)
-				depthMap.event[common.Depth] = channelSlice
+				depthMap.event.e[common.Depth] = channelSlice
 				Wmap[address] = depthMap
 				response := Success(channel)
 				err := c.wsConn.WriteJSON(response)
@@ -285,9 +285,9 @@ func subDepth(c *Connection, channel string) {
 			}
 		}
 	} else {
-		depthMap := make(map[string][]string)
-		depthMap[common.Depth] = []string{channel}
-		c.event = depthMap
+		event := &event{make(map[string][]string)}
+		event.e[common.Depth] = []string{channel}
+		c.event = event
 		Wmap[address] = c
 	}
 }
@@ -299,7 +299,7 @@ func subKline(c *Connection, channel string) error {
 	address := c.wsConn.RemoteAddr().String()
 	klineMap, ok := Wmap[address]
 	if ok {
-		klineChannel, ok := klineMap.event[common.Kline]
+		klineChannel, ok := klineMap.event.e[common.Kline]
 		if ok {
 			response := SubRepeat(channel)
 			err := c.wsConn.WriteJSON(response)
@@ -311,13 +311,13 @@ func subKline(c *Connection, channel string) error {
 			return nil
 		} else {
 			klineChannel = append(klineChannel, channel)
-			klineMap.event[common.Kline] = klineChannel
+			klineMap.event.e[common.Kline] = klineChannel
 			Wmap[address] = klineMap
 		}
 	} else {
-		klineMap := make(map[string][]string)
-		klineMap[common.Kline] = []string{channel}
-		c.event = klineMap
+		event := &event{make(map[string][]string)}
+		event.e[common.Kline] = []string{channel}
+		c.event = event
 		Wmap[address] = c
 		response := Success(channel)
 		err := c.wsConn.WriteJSON(response)
