@@ -1,5 +1,5 @@
 // date: 2019-03-05
-package mysql
+package db
 
 import (
 	"fmt"

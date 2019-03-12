@@ -1,7 +1,7 @@
 // date: 2019-03-08
 package service
 
-import "github.com/Jarvens/Exchange-Agent/mysql"
+import "github.com/Jarvens/Exchange-Agent/db"
 
 type Kline struct {
 	Id     int     //主键
@@ -16,6 +16,6 @@ type Kline struct {
 
 // 查询24H成交总量
 func Queqy24hTick() float64 {
-	mysql.Db.Table("kline1m").Select("sum(volume)").Limit(1440)
+	db.Db.Table("kline1m").Select("sum(volume)").Limit(1440)
 	return 0
 }
