@@ -47,6 +47,12 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("处理器upgrade失败: %v\n", err)
 		return
 	}
+	wsCon.SetCloseHandler(func(code int, text string) error {
+		message := websocket.FormatCloseMessage(code, "")
+		wsCon.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
+		return nil
+	})
+
 	if conn, err = NewWebsocket(wsCon); err != nil {
 		fmt.Printf("处理器初始化失败: %v\n", err)
 		conn.Close()
@@ -76,13 +82,19 @@ func (c *Connection) LoopRead() {
 	)
 	for {
 		if _, data, err = c.wsConn.ReadMessage(); err != nil {
-			fmt.Printf("读取消息失败,关闭连接: %v\n", err)
+			//fmt.Printf("读取消息失败,关闭连接: %v\n", err)
 			goto ERR
 		}
-		fmt.Printf("读取消息: %s\n", string(data))
+
+		//
+		request := Request{}
+		json.Unmarshal(data, &request)
+		fmt.Printf("读取消息: %v\n", request)
+		dispatcher(c, &request)
 		select {
 		case c.inChan <- data:
 		case <-c.closeChan:
+			fmt.Println("关闭消息接收")
 			break
 		}
 	}
@@ -130,9 +142,8 @@ func (c *Connection) Close() {
 func (c *Connection) Read() (data []byte, err error) {
 	select {
 	case data = <-c.inChan:
-		c.Write([]byte("test"))
 	case <-c.closeChan:
-		fmt.Println("连接关闭")
+		fmt.Printf("[Exchange-Agent]连接关闭: 客户端地址: %s\n", c.wsConn.RemoteAddr().String())
 		return nil, errors.New("连接关闭")
 	}
 	return
@@ -160,6 +171,13 @@ func dispatcher(c *Connection, req *Request) {
 		c.wsConn.WriteJSON(Pong(channel))
 	case common.Subscribe:
 		channelStr := strings.Split(channel, ".")
+		if len(channelStr) <= 1 {
+			fmt.Printf("数据错误")
+			response := Fail(channel)
+			data, _ := json.Marshal(response)
+			c.Write(data)
+			break
+		}
 		switch channelStr[1] {
 		case common.Tick:
 		case common.Depth:
