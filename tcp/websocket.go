@@ -18,9 +18,6 @@ var upgrade = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool {
 	return true
 }, EnableCompression: true}
 
-// 使用fileDescription 文件描述符的优点在于不受限制
-// 使用fileDescription 需要每次进行参数校验判断fd是否为当前连接fd
-// 使用地址+端口的方式   受限制
 var Wmap = make(map[string]*Connection)
 
 type event struct {
@@ -44,7 +41,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		conn  *Connection
 	)
 	if wsCon, err = upgrade.Upgrade(w, r, nil); err != nil {
-		log.Infof("处理器upgrade失败: %v\n", err)
+		log.Errorf("处理器upgrade失败: %v\n", err)
 		return
 	}
 	wsCon.SetCloseHandler(func(code int, text string) error {
@@ -82,14 +79,10 @@ func (c *Connection) LoopRead() {
 	)
 	for {
 		if _, data, err = c.wsConn.ReadMessage(); err != nil {
-			//fmt.Printf("读取消息失败,关闭连接: %v\n", err)
 			goto ERR
 		}
-
-		//
 		request := Request{}
 		json.Unmarshal(data, &request)
-		log.Infof("读取消息: %v\n", request)
 		dispatcher(c, &request)
 		select {
 		case c.inChan <- data:
@@ -166,6 +159,11 @@ func (c *Connection) onConnected() {
 func dispatcher(c *Connection, req *Request) {
 	event := req.Event
 	channel := req.Channel
+	if event == "" || channel == "" {
+		log.Errorf("参数错误: event: %s channel: %s", event, channel)
+		c.wsConn.WriteJSON(Fail(channel))
+		return
+	}
 	switch event {
 	case common.Ping:
 		c.wsConn.WriteJSON(Pong(channel))
@@ -180,8 +178,11 @@ func dispatcher(c *Connection, req *Request) {
 		}
 		switch channelStr[1] {
 		case common.Tick:
+			subTick(c, channel)
 		case common.Depth:
+			subDepth(c, channel)
 		case common.Kline:
+			subKline(c, channel)
 
 		}
 

@@ -19,7 +19,6 @@ func main() {
 
 	go grpc.QuoteServerStart()
 	log.Debug("[Exchange-Agent]-gRPC 启动成功")
-
 	fmt.Println(<-inChan)
 }
 
