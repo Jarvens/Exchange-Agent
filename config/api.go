@@ -2,7 +2,7 @@
 package config
 
 const (
-	HostURL    = "http://0.0.0.0:3000"
+	HostURL    = "server://0.0.0.0:3000"
 	ApiRoot    = "/api"
 	ApiVersion = "v1"
 	ApiURL     = ApiRoot + "/" + ApiVersion

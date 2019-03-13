@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Jarvens/Exchange-Agent/config"
 	"github.com/Jarvens/Exchange-Agent/grpc"
+	"github.com/Jarvens/Exchange-Agent/server"
 	"github.com/Jarvens/Exchange-Agent/tcp"
 	"github.com/Jarvens/Exchange-Agent/util/log"
 	"net/http"
@@ -19,6 +20,8 @@ func main() {
 
 	go grpc.QuoteServerStart()
 	log.Debug("[Exchange-Agent]-gRPC 启动成功")
+	server.Run()
+
 	fmt.Println(<-inChan)
 }
 
