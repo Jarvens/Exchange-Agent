@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/Jarvens/Exchange-Agent/util/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 	"io"
@@ -23,23 +24,23 @@ func (q *quoteServer) QuoteBidStream(stream RpcBidStream1_QuoteBidStreamServer) 
 	ctx := stream.Context()
 	address, err := getClientIp(ctx)
 	if err != nil {
-		fmt.Printf("获取客户端IP错误: %v\n", err)
+		log.Infof("获取客户端IP错误: %v\n", err)
 	}
-	fmt.Printf("客户端IP地址Hash值: %x\n", sha256.Sum256([]byte(address)))
+	log.Infof("客户端IP地址Hash值: %x\n", sha256.Sum256([]byte(address)))
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("收到客户端主动断开请求")
+			log.Infof("收到客户端主动断开请求")
 			return ctx.Err()
 		default:
 			request, err := stream.Recv()
 			if err == io.EOF {
-				fmt.Println("关闭客户端")
+				log.Infof("关闭客户端")
 				return nil
 			}
 
 			if err != nil {
-				fmt.Printf("读取客户端数据流出错: %v\n", err)
+				log.Infof("读取客户端数据流出错: %v\n", err)
 				return nil
 			}
 			err = Dispatcher(stream, request, address)
@@ -56,7 +57,7 @@ func (q *quoteServer) QuoteBidStream(stream RpcBidStream1_QuoteBidStreamServer) 
 func sendData(stream RpcBidStream1_QuoteBidStreamServer, message, channel string, code int32) error {
 	err := stream.Send(&RpcResponse1{Code: code, Message: message, Channel: channel})
 	if err != nil {
-		fmt.Printf("回写数据出错: %v\n", err)
+		log.Infof("回写数据出错: %v\n", err)
 		return err
 	}
 	return nil
