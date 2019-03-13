@@ -38,10 +38,8 @@ func AccessLogger() gin.HandlerFunc {
 		c.Next()
 		end := time.Now()
 		latency := end.Sub(start)
-
 		method, statusCode, urlPath, errorString, clientIP := GetContextLogInfo(c)
-
-		stdlogger.Printf("[Exchange-Agent] %v |%3d| %12v |%s %-7s | %s | %s",
+		stdlogger.Printf("[Agent] %v |%3d| %12v |%s %-7s | %s | %s",
 			end.Format("2006/01/02 - 15:04:05"),
 			statusCode,
 			latency,

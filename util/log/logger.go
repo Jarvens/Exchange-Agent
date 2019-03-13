@@ -29,17 +29,17 @@ func InitLogToStdout() {
 }
 
 func InitLogToFile() {
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	out := LumberJackLogger(config.ErrorLogFilePath+config.ErrorLogFileExtension,
-		config.ErrorLogMaxSize,
-		config.ErrorLogMaxBackups,
-		config.ErrorLogMaxAge)
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	out := LumberJackLogger(config.WsErrorLogFilePath+config.WsErrorLogFileExtension,
+		config.WsErrorLogMaxSize,
+		config.WsErrorLogMaxBackups,
+		config.WsErrorLogMaxAge)
 	logrus.SetOutput(out)
 
-	access := LumberJackLogger(config.AccessLogFilePath+config.AccessLogFileExtension,
-		config.AccessLogMaxSize,
-		config.AccessLogMaxBackups,
-		config.AccessLogMaxAge)
+	access := LumberJackLogger(config.WsAccessLogFilePath+config.WsAccessLogFileExtension,
+		config.WsAccessLogMaxSize,
+		config.WsAccessLogMaxBackups,
+		config.WsAccessLogMaxAge)
 	logrus.SetLevel(logrus.InfoLevel)
 	//成功日志输出
 	logrus.SetOutput(access)
@@ -75,6 +75,7 @@ func Info(msg string) {
 
 // Infof logs a formatted message with info log level.
 func Infof(msg string, args ...interface{}) {
+
 	logrus.Infof(msg, args...)
 }
 
@@ -130,4 +131,8 @@ func DebugResponse(response *http.Response) string {
 	}
 	Debugf("response data : %v", str)
 	return str
+}
+
+func init() {
+	Init("PRODUCTION")
 }

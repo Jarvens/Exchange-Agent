@@ -23,7 +23,6 @@ func CORSMiddleware() gin.HandlerFunc {
 
 func Run() {
 	r := gin.New()
-
 	switch config.Environment {
 	case "DEVELOPMENT":
 		r.Use(log.AccessLogger())

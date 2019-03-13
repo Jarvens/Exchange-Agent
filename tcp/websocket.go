@@ -35,6 +35,7 @@ type Connection struct {
 }
 
 func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
+
 	var (
 		wsCon *websocket.Conn
 		err   error
