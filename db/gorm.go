@@ -11,7 +11,7 @@ import (
 var ORM, Errs = GormInit()
 
 func GormInit() (*gorm.DB, error) {
-	db, error := gorm.Open("db", "root:root@/eoe?charset=utf8&parseTime=True&loc=Local")
+	db, error := gorm.Open("mysql", config.MysqlDSL())
 	db.DB()
 	db.DB().Ping()
 	db.DB().SetMaxOpenConns(2000)

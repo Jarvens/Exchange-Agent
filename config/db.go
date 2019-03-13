@@ -2,10 +2,34 @@
 package config
 
 const (
-	DbProtocol    = "tcp"
-	DbHostDev     = "127.0.0.1"
-	DbPortDev     = "3306"
-	DbUserNameDev = "root"
-	DbPasswordDev = "root"
-	DbDatabaseDev = "eoe"
+	MysqlProtocol    = "tcp"
+	MysqlHostDev     = "127.0.0.1"
+	MysqlPortDev     = "3306"
+	MysqlUserNameDev = "root"
+	MysqlPasswordDev = "root"
+	MysqlDatabaseDev = "eoe"
+	MysqlOptionsDev  = "charset=utf8&parseTime=True"
+	MysqlDSLDev      = MysqlUserNameDev + ":" + MysqlPasswordDev + "@" + MysqlProtocol + "(" + MysqlHostDev + ":" + MysqlPortDev + ")/" + MysqlDatabaseDev + "?" + MysqlOptionsDev
+
+	MysqlHostPro     = "127.0.0.1"
+	MysqlPortPro     = "3306"
+	MysqlUserNamePro = "root"
+	MysqlPasswordPro = "root"
+	MysqlDatabasePro = "eoe"
+	MysqlOptionsPro  = "charset=utf8&parseTime=True"
+	MysqlDSLPro      = MysqlUserNamePro + ":" + MysqlPasswordPro + "@" + MysqlProtocol + "(" + MysqlHostPro + ":" + MysqlPortPro + ")/" + MysqlDatabasePro + "?" + MysqlOptionsPro
 )
+
+func MysqlDSL() string {
+	var mysqlDSL string
+	switch Environment {
+	case "DEVELOPMENT":
+		mysqlDSL = MysqlDSLDev
+	case "PRODUCTION":
+		mysqlDSL = MysqlDSLPro
+	default:
+		mysqlDSL = MysqlDSLDev
+
+	}
+	return mysqlDSL
+}
