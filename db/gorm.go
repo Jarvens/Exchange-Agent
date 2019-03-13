@@ -8,7 +8,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-var Db *gorm.DB
 var ORM, Errs = GormInit()
 
 func GormInit() (*gorm.DB, error) {
