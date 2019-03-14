@@ -67,7 +67,7 @@ func sendData(stream RpcBidStream1_QuoteBidStreamServer, message, channel string
 func QuoteServerStart() {
 	server := grpc.NewServer()
 	RegisterRpcBidStream1Server(server, &quoteServer{})
-	address, err := net.Listen("tcp", serverPort)
+	address, err := net.Listen("websocket", serverPort)
 	if err != nil {
 		panic(err)
 	}

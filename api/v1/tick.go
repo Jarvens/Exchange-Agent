@@ -8,7 +8,7 @@ import (
 
 func Tick(parentRoute *gin.RouterGroup) {
 	//服务分组
-	route := parentRoute.Group("/tick")
+	route := parentRoute.Group("/tick", gin.BasicAuth(gin.Accounts{"Admin": "Admin"}))
 	route.GET("/all", allTick)
 }
 

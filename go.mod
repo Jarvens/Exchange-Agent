@@ -1,7 +1,6 @@
 module github.com/Jarvens/Exchange-Agent
 
 require (
-	github.com/codegangsta/cli v1.20.0
 	github.com/denisenkom/go-mssqldb v0.0.0-20190204142019-df6d76eb9289 // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/garyburd/redigo v1.6.0

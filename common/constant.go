@@ -21,13 +21,13 @@ var (
 )
 
 const (
-	Ping        = "ping"
-	Pong        = "pong"
-	Subscribe   = "subscribe"
-	UnSubscribe = "ub_subscribe"
-	Tick        = "tick"
-	Depth       = "depth"
-	Kline       = "kline"
-	Success     = 0
-	Fail        = 1
+	PING    = "ping"
+	PONG    = "pong"
+	SUB     = "sub"
+	UN_SUB  = "un_sub"
+	TICK    = "tick"
+	DEPTH   = "depth"
+	KLINE   = "kline"
+	SUCCESS = 0
+	FAIL    = 1
 )

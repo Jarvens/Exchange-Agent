@@ -2,6 +2,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/Jarvens/Exchange-Agent/api"
 	"github.com/Jarvens/Exchange-Agent/config"
 	"github.com/Jarvens/Exchange-Agent/util/log"
@@ -13,6 +14,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		if c.Request.Method == "OPTIONS" {
+			fmt.Println("OPTIONS 请求")
 			// c.Abort(200)
 			c.Abort()
 			return

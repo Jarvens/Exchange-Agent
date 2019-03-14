@@ -22,7 +22,7 @@ func (r ResourceConn) Close() {
 func RedisInit() (*pools.ResourcePool, ResourceConn, error) {
 	var resourceConn ResourceConn
 	pool := pools.NewResourcePool(func() (pools.Resource, error) {
-		c, err := redis.Dial("tcp", config.RedisAddr())
+		c, err := redis.Dial("websocket", config.RedisAddr())
 		return ResourceConn{c}, err
 	}, config.Capacity, config.MaxCap, time.Minute)
 	ctx := context.TODO()

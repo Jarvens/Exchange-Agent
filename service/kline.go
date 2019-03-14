@@ -12,6 +12,7 @@ func FindKline() {
 }
 
 //K线入库失败需要将错误K线数据写入处理容器，并且需要提供工具类操作未写入成功的数据
+//
 
 //分钟线
 func CreateKline1m(kline model.Kline1m) {

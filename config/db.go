@@ -2,7 +2,7 @@
 package config
 
 const (
-	MysqlProtocol    = "tcp"
+	MysqlProtocol    = "websocket"
 	MysqlHostDev     = "127.0.0.1"
 	MysqlPortDev     = "3306"
 	MysqlUserNameDev = "root"

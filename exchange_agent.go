@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"github.com/Jarvens/Exchange-Agent/grpc"
 	"github.com/Jarvens/Exchange-Agent/server"
-	"github.com/Jarvens/Exchange-Agent/tcp"
 	_ "github.com/Jarvens/Exchange-Agent/util/log"
+	"github.com/Jarvens/Exchange-Agent/websocket"
 	"net/http"
 )
 
 func main() {
 	inChan := make(chan byte)
 
-	http.HandleFunc("/", tcp.WebsocketHandler)
+	http.HandleFunc("/", websocket.WebsocketHandler)
 	go http.ListenAndServe("0.0.0.0:12345", nil)
 	go grpc.QuoteServerStart()
 	server.Run()

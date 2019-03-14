@@ -1,5 +1,5 @@
 // date: 2019-03-08
-package tcp
+package websocket
 
 import "sync"
 
