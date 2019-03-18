@@ -7,7 +7,7 @@ require (
 	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
 	github.com/gin-gonic/gin v1.3.0
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
-	github.com/gofrs/uuid v3.2.0+incompatible // indirect
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/protobuf v1.3.0
 	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/gorilla/websocket v1.4.0
@@ -21,6 +21,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.3.0
+	github.com/streadway/amqp v0.0.0-20190225234609-30f8ed68076e
 	github.com/ugorji/go/codec v0.0.0-20190309163734-c4a1c341dc93 // indirect
 	github.com/youtube/vitess v2.1.1+incompatible
 	golang.org/x/crypto v0.0.0-20190227175134-215aa809caaf // indirect

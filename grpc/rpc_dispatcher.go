@@ -20,34 +20,34 @@ func Dispatcher(stream RpcBidStream1_QuoteBidStreamServer, req *RpcRequest1, add
 	event := req.Event
 	channel := req.Channel
 	switch event {
-	case common.Ping:
+	case common.PING:
 		if err := stream.Send(&RpcResponse1{Code: 0, Message: "pong", Timestamp: time.Now().Unix()}); err != nil {
 			return err
 		}
-	case common.Subscribe:
+	case common.SUB:
 		chanC := strings.Split(channel, ".")
 		switch chanC[1] {
-		case common.Tick:
+		case common.TICK:
 			//channel: quote.tick.btc_usdt
 			return subTick(address, channel, stream)
-		case common.Depth:
+		case common.DEPTH:
 			//channel: quote.depth.btc_usdt
 			return subDepth(address, channel, stream)
-		case common.Kline:
+		case common.KLINE:
 			//channel: quote.kline.btc_usdt
 			return subKline(address, channel, stream)
 		default:
 			//指令不存在
 
 		}
-	case common.UnSubscribe:
+	case common.UN_SUB:
 		chanC := strings.Split(channel, ".")
 		switch chanC[1] {
-		case common.Tick:
+		case common.TICK:
 			return unSubTick(address, channel, stream)
-		case common.Depth:
+		case common.DEPTH:
 			return unSubDepth(address, channel, stream)
-		case common.Kline:
+		case common.KLINE:
 			return unSubKline(address, channel, stream)
 		default:
 			//指令不存在
@@ -71,24 +71,24 @@ func subTick(address, channel string, stream RpcBidStream1_QuoteBidStreamServer)
 	tickMap := common.Smap.ConnMap[address]
 	if tickMap == nil {
 		tickMap := make(map[string][]string)
-		tickMap[common.Tick] = []string{channel}
+		tickMap[common.TICK] = []string{channel}
 		common.Smap.ConnMap[address] = tickMap
 
-		response := &RpcResponse1{Message: "订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("订阅成功: %v\n", common.Smap.ConnMap)
 		return err
 	} else {
-		tickChan := tickMap[common.Tick]
+		tickChan := tickMap[common.TICK]
 		exist, _ := common.Contain(channel, tickChan)
 		if exist {
-			response := &RpcResponse1{Message: "重复订阅", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()}
+			response := &RpcResponse1{Message: "重复订阅", Code: common.FAIL, Channel: channel, Timestamp: time.Now().Unix()}
 			return sendMessage(stream, response)
 		} else {
 			newChan := append(tickChan, channel)
-			tickMap[common.Tick] = newChan
+			tickMap[common.TICK] = newChan
 			common.Smap.ConnMap[address] = tickMap
-			response := &RpcResponse1{Message: "订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+			response := &RpcResponse1{Message: "订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 			err := sendMessage(stream, response)
 			log.Infof("订阅成功: %v\n", common.Smap.ConnMap)
 			return err
@@ -105,25 +105,25 @@ func subDepth(address, channel string, stream RpcBidStream1_QuoteBidStreamServer
 	depthMap := common.Smap.ConnMap[address]
 	if depthMap == nil {
 		depthMap = make(map[string][]string)
-		depthMap[common.Depth] = []string{channel}
+		depthMap[common.DEPTH] = []string{channel}
 		common.Smap.ConnMap[address] = depthMap
-		response := &RpcResponse1{Message: "深度订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "深度订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
 		return err
 	} else {
-		depthChan := depthMap[common.Depth]
+		depthChan := depthMap[common.DEPTH]
 		exist, _ := common.Contain(channel, depthChan)
 		if exist {
-			response := &RpcResponse1{Message: "深度订阅重复", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()}
+			response := &RpcResponse1{Message: "深度订阅重复", Code: common.FAIL, Channel: channel, Timestamp: time.Now().Unix()}
 			err := sendMessage(stream, response)
 			log.Infof("深度订阅重复: 客户端地址: %s 订阅指令: %s\n", address, channel)
 			return err
 		} else {
 			newChan := append(depthChan, channel)
-			depthMap[common.Depth] = newChan
+			depthMap[common.DEPTH] = newChan
 			common.Smap.ConnMap[address] = depthMap
-			response := &RpcResponse1{Message: "深度订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+			response := &RpcResponse1{Message: "深度订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 			err := sendMessage(stream, response)
 			log.Infof("深度订阅成功: 客户端地址: %s 订阅指令: %s\n", address, channel)
 			return err
@@ -141,25 +141,25 @@ func subKline(address, channel string, stream RpcBidStream1_QuoteBidStreamServer
 
 	if klineMap == nil {
 		klineMap = make(map[string][]string)
-		klineMap[common.Kline] = []string{channel}
+		klineMap[common.KLINE] = []string{channel}
 		common.Smap.ConnMap[address] = klineMap
-		response := &RpcResponse1{Message: "k线订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "k线订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("K线订阅成功:  客户端地址:%s K线订阅指令: %s\n", address, channel)
 		return err
 	} else {
-		klineChan := klineMap[common.Kline]
+		klineChan := klineMap[common.KLINE]
 		exist, _ := common.Contain(channel, klineChan)
 		if exist {
-			response := &RpcResponse1{Message: "K线重复订阅", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()}
+			response := &RpcResponse1{Message: "K线重复订阅", Code: common.FAIL, Channel: channel, Timestamp: time.Now().Unix()}
 			err := sendMessage(stream, response)
 			log.Infof("K线重复订阅: 客户端地址: %s 订阅指令: %s\n", address, channel)
 			return err
 		} else {
 			newChan := append(klineChan, channel)
-			klineMap[common.Kline] = newChan
+			klineMap[common.KLINE] = newChan
 			common.Smap.ConnMap[address] = klineMap
-			response := &RpcResponse1{Message: "K线订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+			response := &RpcResponse1{Message: "K线订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 			err := sendMessage(stream, response)
 			log.Infof("K线订阅成功: 客户端地址: %s  订阅指令: %s\n", address, channel)
 			return err
@@ -176,16 +176,16 @@ func unSubTick(address, channel string, stream RpcBidStream1_QuoteBidStreamServe
 
 	tickMap := common.Smap.ConnMap[address]
 	if tickMap == nil {
-		response := &RpcResponse1{Message: "数据不存在", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "数据不存在", Code: common.FAIL, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("数据不存在: 客户端地址: %s  取消指令: %s\n", address, channel)
 		return err
 	} else {
-		tickChan := tickMap[common.Tick]
+		tickChan := tickMap[common.TICK]
 		if len(tickChan) > 0 {
 			common.SliceRemove(tickChan, channel)
 		}
-		response := &RpcResponse1{Message: "取消订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "取消订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("取消深度订阅成功: 客户端地址: %s 取消指令: %s\n", address, channel)
 		return err
@@ -201,16 +201,16 @@ func unSubDepth(address, channel string, stream RpcBidStream1_QuoteBidStreamServ
 
 	depthMap := common.Smap.ConnMap[address]
 	if depthMap == nil {
-		response := &RpcResponse1{Message: "数据不存在", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "数据不存在", Code: common.FAIL, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("数据不存在: 客户端地址: %s  取消指令: %s\n", address, channel)
 		return err
 	} else {
-		depthChan := depthMap[common.Depth]
+		depthChan := depthMap[common.DEPTH]
 		if len(depthChan) > 0 {
 			common.SliceRemove(depthChan, channel)
 		}
-		response := &RpcResponse1{Message: "取消订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "取消订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("取消深度订阅成功: 客户端地址: %s 取消指令: %s\n", address, channel)
 		return err
@@ -225,16 +225,16 @@ func unSubKline(address, channel string, stream RpcBidStream1_QuoteBidStreamServ
 
 	klineMap := common.Smap.ConnMap[address]
 	if klineMap == nil {
-		response := &RpcResponse1{Message: "数据不存在", Code: common.Fail, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "数据不存在", Code: common.FAIL, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("数据不存在: 客户端地址: %s  取消指令: %s\n", address, channel)
 		return err
 	} else {
-		klineChan := klineMap[common.Kline]
+		klineChan := klineMap[common.KLINE]
 		if len(klineChan) > 0 {
 			common.SliceRemove(klineChan, channel)
 		}
-		response := &RpcResponse1{Message: "取消订阅成功", Code: common.Success, Channel: channel, Timestamp: time.Now().Unix()}
+		response := &RpcResponse1{Message: "取消订阅成功", Code: common.SUCCESS, Channel: channel, Timestamp: time.Now().Unix()}
 		err := sendMessage(stream, response)
 		log.Infof("K线取消订阅成功: 客户端地址: %s 取消指令: %s\n", address, channel)
 		return err

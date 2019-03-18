@@ -8,8 +8,8 @@ message RpcResponse1{
     int64 timestamp=4;
 }
 
-//event: subscribe
-//channel: quote.kline.1m.btc_usdt
+//event: sub
+//channel: market.kline.1m.btc_usdt
 message RpcRequest1{
     string event=1;
     string channel=2;
